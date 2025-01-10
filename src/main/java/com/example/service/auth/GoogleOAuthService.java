@@ -15,7 +15,7 @@ import java.util.Collections;
 @Service
 public class GoogleOAuthService {
 
-    @Value("${spring.security.oauth2.client.registration.google.client-id}")
+    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
     private String googleClientId;
 
     public boolean isGoogleOAuthToken(String token) {

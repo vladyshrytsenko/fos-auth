@@ -17,14 +17,15 @@ import org.springframework.stereotype.Service;
 public class AuthenticationService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+//    private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
+//    private final AuthenticationManager authenticationManager;
 
     public AuthenticationResponse register(UserDto userRequestDTO) {
         User userToSave = User.builder()
             .username(userRequestDTO.getUsername())
-            .password(passwordEncoder.encode(userRequestDTO.getPassword()))
+//            .password(passwordEncoder.encode(userRequestDTO.getPassword()))
+            .password(userRequestDTO.getPassword())
             .email(userRequestDTO.getEmail())
             .role(Role.valueOf(userRequestDTO.getRole()))
             .build();
@@ -34,10 +35,10 @@ public class AuthenticationService {
     }
 
     public AuthenticationResponse authenticate(UserDto user) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-            user.getEmail(),
-            user.getPassword())
-        );
+//        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+//            user.getEmail(),
+//            user.getPassword())
+//        );
 
         User userByEmail = userRepository.findByEmail(user.getEmail())
             .orElseThrow(() -> new EntityNotFoundException(User.class));

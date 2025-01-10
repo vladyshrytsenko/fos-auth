@@ -15,50 +15,50 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-@Configuration
-@RequiredArgsConstructor
-public class UserDetailsConfig {
-
-    private final UserService userService;
-
-    @Bean
-    public UserDetailsService getUserDetailsService() {
-        return new UserDetailsService() {
-
-            @Override
-            public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-                UserDto currentUser = null;
-                if (!username.contains("@")) {
-                    UserDto byUsername = userService.getByUsername(username);
-                    if (byUsername != null) {
-                        currentUser = userService.getByEmail(byUsername.getEmail());
-                    }
-                } else {
-                    currentUser = userService.getByEmail(username);
-                }
-                return UserDto.toEntity(currentUser);
-            }
-        };
-    }
-
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(getUserDetailsService());
-        authenticationProvider.setPasswordEncoder(getPasswordEncoder());
-
-        return authenticationProvider;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
-    }
-
-    @Bean
-    public PasswordEncoder getPasswordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-}
-
+//@Configuration
+//@RequiredArgsConstructor
+//public class UserDetailsConfig {
+//
+//    private final UserService userService;
+//
+//    @Bean
+//    public UserDetailsService getUserDetailsService() {
+//        return new UserDetailsService() {
+//
+//            @Override
+//            public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+//                UserDto currentUser = null;
+//                if (!username.contains("@")) {
+//                    UserDto byUsername = userService.getByUsername(username);
+//                    if (byUsername != null) {
+//                        currentUser = userService.getByEmail(byUsername.getEmail());
+//                    }
+//                } else {
+//                    currentUser = userService.getByEmail(username);
+//                }
+//                return UserDto.toEntity(currentUser);
+//            }
+//        };
+//    }
+//
+//    @Bean
+//    public AuthenticationProvider authenticationProvider() {
+//        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+//        authenticationProvider.setUserDetailsService(getUserDetailsService());
+//        authenticationProvider.setPasswordEncoder(getPasswordEncoder());
+//
+//        return authenticationProvider;
+//    }
+//
+//    @Bean
+//    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+//        return configuration.getAuthenticationManager();
+//    }
+//
+//    @Bean
+//    public PasswordEncoder getPasswordEncoder() {
+//        return new BCryptPasswordEncoder();
+//    }
+//
+//}
+//
