@@ -58,17 +58,19 @@ public class WebSecurityConfig {
 //    private final AuthenticationFilter authenticationFilter;
 //    private final AuthenticationProvider authenticationProvider;
 
-    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
-    private String clientId;
-
-    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-secret}")
-    private String clientSecret;
+//    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
+//    private String clientId;
+//
+//    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-secret}")
+//    private String clientSecret;
 
     @Bean
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(authorize ->
-            authorize.anyRequest().authenticated()
-        );
+//        http
+//            .csrf().disable()
+//            .authorizeHttpRequests(authorize ->
+//            authorize.anyRequest().authenticated()
+//        );
         return http.formLogin(withDefaults()).build();
     }
 
