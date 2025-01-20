@@ -2,7 +2,7 @@ package com.example.fosauth.controller;
 
 import com.example.fosauth.model.dto.UserDto;
 import com.example.fosauth.model.enums.Role;
-//import com.example.model.request.GoogleAuthRequest;
+import com.example.fosauth.model.request.GoogleAuthRequest;
 import com.example.fosauth.model.response.AuthenticationResponse;
 import com.example.fosauth.service.UserService;
 import com.example.fosauth.service.auth.AuthenticationService;
@@ -44,22 +44,21 @@ public class UserController {
         }
     }
 
-//    @CrossOrigin(origins = "http://localhost:4200")
-//    @PostMapping("/auth/google")
-//    public ResponseEntity<?> authenticateWithGoogle(@RequestBody GoogleAuthRequest googleAuthRequest) {
-//        String idToken = googleAuthRequest.getToken();
-//
-//        String googleUserId = this.googleOAuthService.validateTokenAndGetUserId(idToken);
-//        if (googleUserId == null) {
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Google token");
-//        }
-//
-//        UserDto userDto = this.userService.findByGoogleId(googleUserId);
-//        if (userDto == null) {
-//            this.userService.createUserFromGoogle(googleUserId, idToken);
-//        }
-//        return ResponseEntity.ok(new AuthenticationResponse(idToken));
-//    }
+    @PostMapping("/auth/google")
+    public ResponseEntity<?> authenticateWithGoogle(@RequestBody GoogleAuthRequest googleAuthRequest) {
+        String idToken = googleAuthRequest.getToken();
+
+        String googleUserId = this.googleOAuthService.validateTokenAndGetUserId(idToken);
+        if (googleUserId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Google token");
+        }
+
+        UserDto userDto = this.userService.findByGoogleId(googleUserId);
+        if (userDto == null) {
+            this.userService.createUserFromGoogle(googleUserId, idToken);
+        }
+        return ResponseEntity.ok(new AuthenticationResponse(idToken));
+    }
 
     @GetMapping("/oauth/info")
     public ResponseEntity<UserDto> getUserInfo(@AuthenticationPrincipal OAuth2User principal) {

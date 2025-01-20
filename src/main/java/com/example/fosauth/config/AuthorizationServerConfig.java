@@ -2,7 +2,6 @@ package com.example.fosauth.config;
 
 import com.example.fosauth.config.util.AuthorizationServerProperties;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -27,11 +26,11 @@ import java.time.temporal.ChronoUnit;
 @RequiredArgsConstructor
 public class AuthorizationServerConfig {
 
-    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
-    private String clientId;
+    //    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
+    //    private String clientId;
 
-    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-secret}")
-    private String clientSecret;
+    //    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-secret}")
+    //    private String clientSecret;
 
     private final AuthorizationServerProperties authorizationServerProperties;
 
@@ -50,8 +49,8 @@ public class AuthorizationServerConfig {
         return new InMemoryRegisteredClientRepository(
             RegisteredClient.withId("test-client-id")
                 .clientName("Test Client")
-                .clientId(this.clientId)
-                .clientSecret(this.clientSecret)
+                .clientId("653875561290-jtd5p8sda5ulj7ul6s2dofkmq7k1neht.apps.googleusercontent.com")
+                .clientSecret("{noop}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")
                 .redirectUri("http://localhost:8080/login/oauth2/code")
                 .scope("read.scope")
                 .scope("write.scope")
@@ -73,8 +72,10 @@ public class AuthorizationServerConfig {
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder()
-            .issuer(authorizationServerProperties.getIssuerUrl())
-            .tokenIntrospectionEndpoint(authorizationServerProperties.getIntrospectionEndpoint())
+            .issuer("http://localhost:9000")
+            .tokenIntrospectionEndpoint("/oauth2/token-info")
+            //            .issuer(authorizationServerProperties.getIssuerUrl())
+            //            .tokenIntrospectionEndpoint(authorizationServerProperties.getIntrospectionEndpoint())
             .build();
     }
 }
