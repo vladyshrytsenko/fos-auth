@@ -5,6 +5,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -14,8 +15,8 @@ import java.util.Collections;
 @Service
 public class GoogleOAuthService {
 
-    //    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
-    //    private String googleClientId;
+        @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
+        private String googleClientId;
 
     public boolean isGoogleOAuthToken(String token) {
         return token != null && token.length() > 100;
@@ -24,7 +25,7 @@ public class GoogleOAuthService {
     public String validateTokenAndGetUserId(String token) {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
-                .setAudience(Collections.singletonList("653875561290-jtd5p8sda5ulj7ul6s2dofkmq7k1neht.apps.googleusercontent.com"))
+                .setAudience(Collections.singletonList(this.googleClientId))
                 .build();
 
             GoogleIdToken idToken = verifier.verify(token);
@@ -42,7 +43,7 @@ public class GoogleOAuthService {
     public GoogleUserInfo validateTokenAndGetUserInfo(String token) {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
-                .setAudience(Collections.singletonList("653875561290-jtd5p8sda5ulj7ul6s2dofkmq7k1neht.apps.googleusercontent.com"))
+                .setAudience(Collections.singletonList(this.googleClientId))
                 .build();
 
             GoogleIdToken idToken = verifier.verify(token);
