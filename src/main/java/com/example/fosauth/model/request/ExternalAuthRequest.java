@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class GoogleAuthRequest {
+public class ExternalAuthRequest {
     private String token;
 }

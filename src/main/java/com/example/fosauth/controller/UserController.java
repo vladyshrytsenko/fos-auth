@@ -2,12 +2,13 @@ package com.example.fosauth.controller;
 
 import com.example.fosauth.model.dto.UserDto;
 import com.example.fosauth.model.enums.Role;
-import com.example.fosauth.model.request.GoogleAuthRequest;
+import com.example.fosauth.model.request.ExternalAuthRequest;
 import com.example.fosauth.model.response.AuthenticationResponse;
 import com.example.fosauth.service.UserService;
 import com.example.fosauth.service.auth.AuthenticationService;
 import com.example.fosauth.service.auth.GoogleOAuthService;
 import com.example.fosauth.service.auth.JwtService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -45,7 +48,7 @@ public class UserController {
     }
 
     @PostMapping("/auth/google")
-    public ResponseEntity<?> authenticateWithGoogle(@RequestBody GoogleAuthRequest googleAuthRequest) {
+    public ResponseEntity<?> authenticateWithGoogle(@RequestBody ExternalAuthRequest googleAuthRequest) {
         String idToken = googleAuthRequest.getToken();
 
         String googleUserId = this.googleOAuthService.validateTokenAndGetUserId(idToken);
@@ -58,6 +61,47 @@ public class UserController {
             this.userService.createUserFromGoogle(googleUserId, idToken);
         }
         return ResponseEntity.ok(new AuthenticationResponse(idToken));
+    }
+
+//    @PostMapping("/auth/github")
+//    public ResponseEntity<?> authenticateWithGithub(@RequestBody ExternalAuthRequest githubAuthRequest) {
+//        String idToken = githubAuthRequest.getToken();
+//
+//        String googleUserId = this.googleOAuthService.validateTokenAndGetUserId(idToken);
+//        if (googleUserId == null) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Google token");
+//        }
+//
+//        UserDto userDto = this.userService.findByGoogleId(googleUserId);
+//        if (userDto == null) {
+//            this.userService.createUserFromGoogle(googleUserId, idToken);
+//        }
+//        return ResponseEntity.ok(new AuthenticationResponse(idToken));
+//    }
+
+    @GetMapping("/auth/github")
+    public void redirectToGitHub(HttpServletResponse response) throws IOException {
+        String clientId = "Ov23litiK006HYqyvgal";
+        String redirectUri = "http://localhost:4200";
+        String githubAuthUrl = "https://github.com/login/oauth/authorize?client_id=" + clientId + "&redirect_uri=" + redirectUri;
+
+        response.sendRedirect(githubAuthUrl);
+    }
+
+    @PostMapping("/github/callback")
+    public ResponseEntity<?> githubCallback(@RequestBody Map<String, String> requestBody) {
+        String code = requestBody.get("code");
+        if (code == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing code");
+        }
+
+//        String githubToken = githubOAuthService.exchangeCodeForToken(code);
+//        UserDto user = userService.findByGithubId(githubToken);
+//        if (user == null) {
+//            user = userService.createUserFromGithub(githubToken);
+//        }
+
+        return ResponseEntity.ok(new Object());
     }
 
     @GetMapping("/oauth/info")

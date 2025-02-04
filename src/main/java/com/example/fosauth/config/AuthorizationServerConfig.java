@@ -27,31 +27,31 @@ import java.time.temporal.ChronoUnit;
 @RequiredArgsConstructor
 public class AuthorizationServerConfig {
 
-        @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
-        private String clientId;
-
-        @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-secret}")
-        private String clientSecret;
+//        @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
+//        private String clientId;
+//
+//        @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-secret}")
+//        private String clientSecret;
 
     private final AuthorizationServerProperties authorizationServerProperties;
 
-    @Bean
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    public SecurityFilterChain authServerSecurityFilterChain(HttpSecurity http) throws Exception {
-        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-        http.exceptionHandling(exceptions ->
-            exceptions.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
-        );
-        return http.build();
-    }
+//    @Bean //fixme
+//    @Order(Ordered.HIGHEST_PRECEDENCE)
+//    public SecurityFilterChain authServerSecurityFilterChain(HttpSecurity http) throws Exception {
+//        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+//        http.exceptionHandling(exceptions ->
+//            exceptions.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
+//        );
+//        return http.build();
+//    }
 
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
         return new InMemoryRegisteredClientRepository(
             RegisteredClient.withId("test-client-id")
                 .clientName("Test Client")
-                .clientId(this.clientId)
-                .clientSecret(this.clientSecret)
+                .clientId("653875561290-jtd5p8sda5ulj7ul6s2dofkmq7k1neht.apps.googleusercontent.com")
+                .clientSecret("{noop}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")
                 .redirectUri("http://localhost:8080/login/oauth2/code")
                 .scope("read.scope")
                 .scope("write.scope")

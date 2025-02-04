@@ -9,6 +9,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -33,7 +35,7 @@ public class WebSecurityConfig {
 //    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-secret}")
 //    private String clientSecret;
 
-    @Bean
+    @Bean //fixme
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
@@ -43,6 +45,32 @@ public class WebSecurityConfig {
 //        );
         return http.formLogin(withDefaults()).build();
     }
+
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        http
+//            .authorizeHttpRequests(auth -> auth
+//                .anyRequest().authenticated()
+//            )
+//            .oauth2Login(oauth2 -> oauth2
+//                .successHandler((request, response, authentication) -> {
+//                    String redirectUrl = "/";
+//
+//                    if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+//                        String authProvider = oauthToken.getAuthorizedClientRegistrationId();
+//
+//                        if ("github".equals(authProvider)) {
+//                            redirectUrl = "http://localhost:9000/api/users/auth/github";
+//                        } else if ("google".equals(authProvider)) {
+//                            redirectUrl = "http://localhost:9000/api/users/auth/google";
+//                        }
+//                    }
+//
+//                    response.sendRedirect(redirectUrl);
+//                })
+//            );
+//        return http.build();
+//    }
 
     @Bean
     public UserDetailsService users() {
