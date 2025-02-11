@@ -29,23 +29,22 @@ public class AuthenticationService {
             .role(Role.USER)
             .build();
 
-        User createdUser = userRepository.save(userToSave);
+        User createdUser = this.userRepository.save(userToSave);
         return getAuthenticationResponse(createdUser);
     }
 
     public AuthenticationResponse authenticate(UserDto user) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-            user.getEmail(),
-            user.getPassword())
+        this.authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(user.getEmail(), user.getPassword())
         );
 
-        User userByEmail = userRepository.findByEmail(user.getEmail())
+        User userByEmail = this.userRepository.findByEmail(user.getEmail())
             .orElseThrow(() -> new EntityNotFoundException(User.class));
         return getAuthenticationResponse(userByEmail);
     }
 
     private AuthenticationResponse getAuthenticationResponse(User saved) {
-        String generatedToken = jwtService.generateToken(saved);
+        String generatedToken = this.jwtService.generateToken(saved);
 
         return AuthenticationResponse.builder()
             .token(generatedToken)

@@ -11,9 +11,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
@@ -29,7 +31,9 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFilter;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -46,24 +50,6 @@ import java.util.UUID;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class WebSecurityConfig {
-
-    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
-    private String oidcClientId;
-
-    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-secret}")
-    private String oidcClientSecret;
-
-    @Value("${spring.security.oauth2.client.registration.google.client-id}")
-    private String googleClientId;
-
-    @Value("${spring.security.oauth2.client.registration.google.client-secret}")
-    private String googleClientSecret;
-
-    @Value("${spring.security.oauth2.client.registration.github.client-id}")
-    private String githubClientId;
-
-    @Value("${spring.security.oauth2.client.registration.github.client-secret}")
-    private String githubClientSecret;
 
     @Bean
     @Order(1)
@@ -93,23 +79,20 @@ public class WebSecurityConfig {
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests((authorize) -> authorize
-                .requestMatchers("/oauth2/**", "/login**").permitAll()
-                .anyRequest().authenticated()
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+            .csrf().disable()
+            .formLogin(form -> form
+                .loginPage("/login")
+                .defaultSuccessUrl("http://localhost:4200/menu", true)
+                .permitAll()
             )
-            // Form login handles the redirect to the login page from the
-            // authorization server filter chain
-//            .oauth2Login(oauth2 -> oauth2
-//                .clientRegistrationRepository(clientRegistrationRepository())
-//                .authorizationEndpoint(authorizationEndpoint -> authorizationEndpoint
-//                    .baseUri("/oauth2/authorization")
-//                )
-//                .tokenEndpoint(tokenEndpoint -> tokenEndpoint
-//                    .accessTokenResponseClient(accessTokenResponseClient())
-//                )
-//            );
-//            .formLogin(Customizer.withDefaults())
-            .oauth2Login(Customizer.withDefaults());
+            .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .oauth2Login(oauth2 -> oauth2
+                .defaultSuccessUrl("http://localhost:4200/menu", true)
+            )
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+
         return http.build();
     }
 
@@ -227,4 +210,24 @@ public class WebSecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
+    private final JwtAuthenticationFilter authenticationFilter;
+
+    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
+    private String oidcClientId;
+
+    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-secret}")
+    private String oidcClientSecret;
+
+    @Value("${spring.security.oauth2.client.registration.google.client-id}")
+    private String googleClientId;
+
+    @Value("${spring.security.oauth2.client.registration.google.client-secret}")
+    private String googleClientSecret;
+
+    @Value("${spring.security.oauth2.client.registration.github.client-id}")
+    private String githubClientId;
+
+    @Value("${spring.security.oauth2.client.registration.github.client-secret}")
+    private String githubClientSecret;
 }
