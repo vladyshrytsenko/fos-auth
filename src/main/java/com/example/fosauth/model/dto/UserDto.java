@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 @Builder
 public class UserDto {
 
+    private Long id;
+
     @Size(min = 6, max = 32, message = "invalid 'username' size")
     private String username;
 
@@ -37,6 +39,7 @@ public class UserDto {
         }
 
         return UserDto.builder()
+            .id(user.getId())
             .username(user.getUsername())
             .password(user.getPassword())
             .email(user.getEmail())

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,15 +27,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
-    private final AuthenticationService authenticationService;
-    private final GoogleOAuthService googleOAuthService;
-    private final JwtService jwtService;
-
     @GetMapping("/current-user")
-    public ResponseEntity<UserDto> getCurrentUser() {
+    public ResponseEntity<UserDto> getCurrentUser(
+        @RequestHeader("Authorization") String authHeader
+    ) {
         try {
-            UserDto userDto = this.userService.getCurrentUser();
+            UserDto userDto = this.userService.getCurrentUser(authHeader);
             return ResponseEntity.ok(userDto);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -44,49 +42,49 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
 
-        UserDto userDto = userService.getById(id);
+        UserDto userDto = this.userService.getById(id);
         return ResponseEntity.ok(userDto);
     }
 
     @GetMapping("/username/{username}")
     public ResponseEntity<UserDto> getUserByUsername(@PathVariable String username) {
 
-        UserDto userDto = userService.getByUsername(username);
+        UserDto userDto = this.userService.getByUsername(username);
         return ResponseEntity.ok(userDto);
     }
 
     @GetMapping("/email/{email}")
     public ResponseEntity<UserDto> getUserByEmail(@PathVariable String email) {
 
-        UserDto userDto = userService.getByEmail(email);
+        UserDto userDto = this.userService.getByEmail(email);
         return ResponseEntity.ok(userDto);
     }
 
     @GetMapping("/role/{role}")
     public ResponseEntity<UserDto> getUserByRole(@PathVariable String role) {
 
-        UserDto userDto = userService.findByRole(Role.valueOf(role));
+        UserDto userDto = this.userService.findByRole(Role.valueOf(role));
         return ResponseEntity.ok(userDto);
     }
 
     @GetMapping
     public ResponseEntity<List<UserDto>> getAllUsers() {
 
-        List<UserDto> users = userService.findAll();
+        List<UserDto> users = this.userService.findAll();
         return ResponseEntity.ok(users);
     }
 
     @PostMapping("/auth/register")
     public ResponseEntity<AuthenticationResponse> registerUser(@RequestBody UserDto userRequestDto) {
 
-        AuthenticationResponse registered = authenticationService.register(userRequestDto);
+        AuthenticationResponse registered = this.authenticationService.register(userRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(registered);
     }
 
     @PostMapping("/auth/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody UserDto userRequestDto) {
 
-        AuthenticationResponse authenticated = authenticationService.authenticate(userRequestDto);
+        AuthenticationResponse authenticated = this.authenticationService.authenticate(userRequestDto);
         return ResponseEntity.status(HttpStatus.OK).body(authenticated);
     }
 
@@ -95,14 +93,19 @@ public class UserController {
         @PathVariable Long id,
         @RequestBody UserDto userRequestDto) {
 
-        UserDto updatedUser = userService.update(id, userRequestDto);
+        UserDto updatedUser = this.userService.update(id, userRequestDto);
         return ResponseEntity.ok(updatedUser);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
 
-        userService.delete(id);
+        this.userService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    private final UserService userService;
+    private final AuthenticationService authenticationService;
+    private final GoogleOAuthService googleOAuthService;
+    private final JwtService jwtService;
 }

@@ -7,12 +7,11 @@ import com.example.fosauth.model.entity.User;
 import com.example.fosauth.model.enums.Role;
 import com.example.fosauth.repository.UserRepository;
 import com.example.fosauth.service.auth.GoogleOAuthService;
+import com.example.fosauth.util.JwtParser;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,35 +21,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository;
-    private final GoogleOAuthService googleOAuthService;
+    public UserDto getCurrentUser(String token) {
+        Claims claims = JwtParser.extractAllClaims(token);
 
-    public UserDto getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("User not authenticated");
-        }
-
-        Object principal = authentication.getPrincipal();
-
-        if (principal instanceof User) {
-            return UserDto.toDto((User) principal);
-        } else if (principal instanceof UserDetails) {
-            String email = ((UserDetails) principal).getUsername();
-            User user = this.userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-            return UserDto.toDto(user);
-        } else if (principal instanceof OAuth2User) {
-            String email = ((OAuth2User) principal).getAttribute("email");
-            User user = this.userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-            return UserDto.toDto(user);
-        }
-
-        throw new RuntimeException("Unknown authentication principal");
+        String username = claims.get("sub").toString();
+        Optional<User> user = userRepository.findByUsername(username);
+        return user.map(UserDto::toDto).orElse(null);
     }
-
 
     public UserDto findByGoogleId(String googleId) {
         Optional<User> userByGoogleIdOptional = this.userRepository.findByGoogleUserId(googleId);
@@ -82,6 +59,10 @@ public class UserService {
         return UserDto.toDtoList(userList);
     }
 
+    public List<User> findAllEntities() {
+        return this.userRepository.findAll();
+    }
+
     public UserDto findByRole(Role role) {
         User userByRole = this.userRepository.findByRole(role).orElse(null);
         return userByRole != null ? UserDto.toDto(userByRole) : null;
@@ -99,11 +80,6 @@ public class UserService {
             .orElseThrow(() -> new EntityNotFoundException(User.class));
 
         return UserDto.toDto(userEmail);
-    }
-
-    //report creation
-    public List<User> getTopTenUsers() {
-        return this.userRepository.findTop10ByOrderByIdAsc();
     }
 
     public UserDetails loadUserByGoogleId(String googleUserId) throws UsernameNotFoundException {
@@ -128,5 +104,7 @@ public class UserService {
     public void delete(Long id) {
         this.userRepository.deleteById(id);
     }
-}
 
+    private final UserRepository userRepository;
+    private final GoogleOAuthService googleOAuthService;
+}
