@@ -1,5 +1,7 @@
 package com.example.fosauth.config;
 
+import com.example.fosauth.exception.EntityNotFoundException;
+import com.example.fosauth.repository.UserRepository;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -11,29 +13,34 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationFilter;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -43,6 +50,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -62,7 +70,11 @@ public class WebSecurityConfig {
                 authorizationServer
                     .oidc(Customizer.withDefaults())
             )
-            .authorizeHttpRequests((authorize) -> authorize.anyRequest().authenticated())
+//            .authorizeHttpRequests((authorize) -> authorize.anyRequest().authenticated())
+            .authorizeHttpRequests((authorize) -> authorize
+                .requestMatchers("/oauth2/token", "/oauth2/authorize", "/api/users/auth/register").permitAll()
+                .anyRequest().authenticated()
+            )
             // Redirect to the login page when not authenticated from the
             // authorization endpoint
             .exceptionHandling((exceptions) -> exceptions
@@ -71,7 +83,6 @@ public class WebSecurityConfig {
                     new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
                 )
             );
-
         return http.build();
     }
 
@@ -80,16 +91,26 @@ public class WebSecurityConfig {
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
-            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-            .csrf().disable()
-            .formLogin(form -> form
-                .loginPage("/login")
-                .defaultSuccessUrl("http://localhost:4200/menu", true)
-                .permitAll()
+//            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/login", "/oauth2/token", "/oauth2/authorize", "/api/users/auth/register").permitAll()
+                .anyRequest().authenticated()
             )
-            .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .csrf().disable()
+//            .formLogin(form -> form
+//                .loginPage("/login")
+//                .defaultSuccessUrl("http://localhost:4200/menu", true)
+//                .permitAll()
+//            )
+            .csrf(AbstractHttpConfigurer::disable)
+            .formLogin(Customizer.withDefaults())
             .oauth2Login(oauth2 -> oauth2
                 .defaultSuccessUrl("http://localhost:4200/menu", true)
+            )
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(jwt -> jwt
+                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                )
             )
             .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
@@ -115,7 +136,7 @@ public class WebSecurityConfig {
         // GitHub OAuth2 client registration
         ClientRegistration githubClientRegistration = ClientRegistration.withRegistrationId("Github")
             .clientId(this.githubClientId)
-            .clientSecret(githubClientSecret)
+            .clientSecret(this.githubClientSecret)
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .redirectUri("http://localhost:9000/login/oauth2/code/github")
@@ -135,7 +156,7 @@ public class WebSecurityConfig {
         RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
             .clientId(this.oidcClientId)
             .clientSecret(this.oidcClientSecret)
-            .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .redirectUri("http://localhost:4200/menu")
@@ -144,7 +165,7 @@ public class WebSecurityConfig {
             .scope(OidcScopes.EMAIL)
             .scope(OidcScopes.PROFILE)
             .clientSettings(ClientSettings.builder()
-                .requireAuthorizationConsent(true)
+                .requireAuthorizationConsent(false)
                 .requireProofKey(false)
                 .build())
             .build();
@@ -161,6 +182,12 @@ public class WebSecurityConfig {
 //        client.setRequestEntityConverter(requestEntityConverter);
 //        return client;
 //    }
+
+    @Bean
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        return email -> userRepository.findByEmail(email)
+            .orElseThrow(() -> new EntityNotFoundException(User.class));
+    }
 
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
@@ -189,8 +216,10 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
-        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
+    public JwtDecoder jwtDecoder() {
+        return NimbusJwtDecoder.withJwkSetUri("http://localhost:9000/oauth2/jwks")
+            .jwsAlgorithm(SignatureAlgorithm.RS256)
+            .build();
     }
 
     @Bean
@@ -211,7 +240,16 @@ public class WebSecurityConfig {
         return source;
     }
 
-    private final JwtAuthenticationFilter authenticationFilter;
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("roles");
+
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+        return jwtAuthenticationConverter;
+    }
 
     @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
     private String oidcClientId;

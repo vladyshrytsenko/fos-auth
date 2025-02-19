@@ -1,5 +1,6 @@
 package com.example.fosauth.model.response;
 
+import com.example.fosauth.model.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,6 +13,8 @@ import lombok.Setter;
 @Builder
 public class AuthenticationResponse {
 
-    private String token;
+    private String username;
+    private String email;
+    private Role role;
 
 }

@@ -6,7 +6,6 @@ import com.example.fosauth.model.response.AuthenticationResponse;
 import com.example.fosauth.service.UserService;
 import com.example.fosauth.service.auth.AuthenticationService;
 import com.example.fosauth.service.auth.GoogleOAuthService;
-import com.example.fosauth.service.auth.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -81,13 +80,6 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(registered);
     }
 
-    @PostMapping("/auth/authenticate")
-    public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody UserDto userRequestDto) {
-
-        AuthenticationResponse authenticated = this.authenticationService.authenticate(userRequestDto);
-        return ResponseEntity.status(HttpStatus.OK).body(authenticated);
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<UserDto> updateUser(
         @PathVariable Long id,
@@ -107,5 +99,4 @@ public class UserController {
     private final UserService userService;
     private final AuthenticationService authenticationService;
     private final GoogleOAuthService googleOAuthService;
-    private final JwtService jwtService;
 }
