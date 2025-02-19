@@ -9,10 +9,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
@@ -23,21 +21,18 @@ public class UserDetailsConfig {
 
     @Bean
     public UserDetailsService getUserDetailsService() {
-        return new UserDetailsService() {
+        return username -> {
 
-            @Override
-            public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-                UserDto currentUser = null;
-                if (!username.contains("@")) {
-                    UserDto byUsername = userService.getByUsername(username);
-                    if (byUsername != null) {
-                        currentUser = userService.getByEmail(byUsername.getEmail());
-                    }
-                } else {
-                    currentUser = userService.getByEmail(username);
+            UserDto currentUser = null;
+            if (!username.contains("@")) {
+                UserDto byUsername = userService.getByUsername(username);
+                if (byUsername != null) {
+                    currentUser = userService.getByEmail(byUsername.getEmail());
                 }
-                return UserDto.toEntity(currentUser);
+            } else {
+                currentUser = userService.getByEmail(username);
             }
+            return UserDto.toEntity(currentUser);
         };
     }
 
@@ -57,8 +52,7 @@ public class UserDetailsConfig {
 
     @Bean
     public PasswordEncoder getPasswordEncoder() {
-        return new BCryptPasswordEncoder();
+        return NoOpPasswordEncoder.getInstance();
     }
 
 }
-//
