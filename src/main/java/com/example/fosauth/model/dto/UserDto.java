@@ -2,6 +2,7 @@ package com.example.fosauth.model.dto;
 
 import com.example.fosauth.model.entity.User;
 import com.example.fosauth.model.enums.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -23,6 +24,7 @@ public class UserDto {
     @Size(min = 6, max = 32, message = "invalid 'username' size")
     private String username;
 
+    @JsonIgnore
     private String password;
 
     @Email(message = "invalid 'email' structure")

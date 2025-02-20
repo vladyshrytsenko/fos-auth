@@ -21,7 +21,7 @@ public class AuthenticationService {
             .username(userRequestDTO.getUsername())
             .password(passwordEncoder.encode(userRequestDTO.getPassword()))
             .email(userRequestDTO.getEmail())
-            .role(Role.USER)
+            .role(Role.valueOf(userRequestDTO.getRole()))
             .build();
 
         User createdUser = this.userRepository.save(userToSave);

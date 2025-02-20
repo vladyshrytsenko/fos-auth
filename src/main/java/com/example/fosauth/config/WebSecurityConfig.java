@@ -59,6 +59,7 @@ public class WebSecurityConfig {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 
         http
+            .cors(Customizer.withDefaults())
             .csrf(AbstractHttpConfigurer::disable)
 
             // Redirect to the login page when not authenticated from the
@@ -79,9 +80,20 @@ public class WebSecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .formLogin(Customizer.withDefaults())
+            .oauth2Login(oauth2 -> oauth2
+                .defaultSuccessUrl("http://localhost:4200/menu", true)
+            )
+//            .oauth2ResourceServer(oauth2 -> oauth2
+//                .jwt(jwt -> jwt
+//                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
+//                )
+//            )
+            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests((authorize) -> authorize
                 .requestMatchers(HttpMethod.POST, "/api/users/auth/register").permitAll()
                 .requestMatchers("/oauth2/token", "/oauth2/authorize").permitAll()
+                .requestMatchers("/api/users/current-user").authenticated()
                 .anyRequest().authenticated()
             );
         return http.build();
@@ -191,7 +203,7 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:8080", "http://localhost:4200","http://localhost:8081" ));
+        configuration.setAllowedOrigins(List.of("http://localhost:8080", "http://localhost:4200"));
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);

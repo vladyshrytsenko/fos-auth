@@ -7,8 +7,6 @@ import com.example.fosauth.model.entity.User;
 import com.example.fosauth.model.enums.Role;
 import com.example.fosauth.repository.UserRepository;
 import com.example.fosauth.service.auth.GoogleOAuthService;
-import com.example.fosauth.util.JwtParser;
-import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,14 +18,6 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-
-    public UserDto getCurrentUser(String token) {
-        Claims claims = JwtParser.extractAllClaims(token);
-
-        String username = claims.get("sub").toString();
-        Optional<User> user = userRepository.findByUsername(username);
-        return user.map(UserDto::toDto).orElse(null);
-    }
 
     public UserDto findByGoogleId(String googleId) {
         Optional<User> userByGoogleIdOptional = this.userRepository.findByGoogleUserId(googleId);
