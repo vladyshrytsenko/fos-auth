@@ -8,6 +8,8 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -61,9 +63,6 @@ public class WebSecurityConfig {
         http
             .cors(Customizer.withDefaults())
             .csrf(AbstractHttpConfigurer::disable)
-
-            // Redirect to the login page when not authenticated from the
-            // authorization endpoint
             .exceptionHandling(
                 e -> e.authenticationEntryPoint(
                     new LoginUrlAuthenticationEntryPoint("/login")
@@ -79,17 +78,31 @@ public class WebSecurityConfig {
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .formLogin(Customizer.withDefaults())
             .oauth2Login(oauth2 -> oauth2
                 .defaultSuccessUrl("http://localhost:4200/menu", true)
             )
-//            .oauth2ResourceServer(oauth2 -> oauth2
-//                .jwt(jwt -> jwt
-//                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
-//                )
-//            )
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(jwt -> jwt
+                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                )
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    Cookie cookie = new Cookie("JSESSIONID", null);
+                    cookie.setHttpOnly(true);
+                    cookie.setSecure(false);
+                    cookie.setPath("/");
+                    cookie.setMaxAge(0);
+
+                    response.addCookie(cookie);
+                    response.setStatus(HttpServletResponse.SC_OK);
+                })
+            )
+
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests((authorize) -> authorize
                 .requestMatchers(HttpMethod.POST, "/api/users/auth/register").permitAll()
                 .requestMatchers("/oauth2/token", "/oauth2/authorize").permitAll()
@@ -105,7 +118,7 @@ public class WebSecurityConfig {
         ClientRegistration googleClientRegistration = ClientRegistration.withRegistrationId("Google")
             .clientId(this.googleClientId)
             .clientSecret(this.googleClientSecret)
-            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+            .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .redirectUri("http://localhost:9000/login/oauth2/code/google")
             .scope(OidcScopes.OPENID, OidcScopes.EMAIL, OidcScopes.PROFILE)
@@ -131,16 +144,6 @@ public class WebSecurityConfig {
 
         return new InMemoryClientRegistrationRepository(googleClientRegistration, githubClientRegistration);
     }
-
-//    @Bean
-//    public OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> accessTokenResponseClient() {
-//        OAuth2AuthorizationCodeGrantRequestEntityConverter requestEntityConverter =
-//            new OAuth2AuthorizationCodeGrantRequestEntityConverter();
-//        OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> client =
-//            new DefaultOAuth2AccessTokenResponseClient();
-//        client.setRequestEntityConverter(requestEntityConverter);
-//        return client;
-//    }
 
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
@@ -182,7 +185,7 @@ public class WebSecurityConfig {
 
                     claims.put("user_id", foundUser.getId());
                     claims.put("email", foundUser.getEmail());
-                    claims.put("role", foundUser.getRole().toString());
+                    claims.put("role", foundUser.getRole().name());
                 });
             }
         };
@@ -217,8 +220,7 @@ public class WebSecurityConfig {
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
-        grantedAuthoritiesConverter.setAuthoritiesClaimName("roles");
-
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("role");
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
         return jwtAuthenticationConverter;

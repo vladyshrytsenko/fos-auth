@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,13 +29,19 @@ import java.util.List;
 public class UserController {
 
     @GetMapping("/current-user")
-    public ResponseEntity<UserDto> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
-        if (jwt == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    public ResponseEntity<UserDto> getCurrentUser(
+        @AuthenticationPrincipal Object principal) {
+
+        if (principal instanceof Jwt jwt) {
+            String username = jwt.getSubject();
+            return ResponseEntity.ok(this.userService.getByUsername(username));
+
+        } else if (principal instanceof OAuth2User oauthUser) {
+            String email = oauthUser.getAttribute("email");
+            return ResponseEntity.ok(this.userService.getByEmail(email));
         }
 
-        UserDto currentUser = this.userService.getByUsername(jwt.getSubject());
-        return ResponseEntity.ok(currentUser);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @GetMapping("/{id}")
