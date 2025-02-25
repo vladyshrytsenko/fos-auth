@@ -107,6 +107,7 @@ public class WebSecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/users/auth/register").permitAll()
                 .requestMatchers("/oauth2/token", "/oauth2/authorize").permitAll()
                 .requestMatchers("/api/users/current-user").authenticated()
+                .requestMatchers("/api/users").permitAll()
                 .anyRequest().authenticated()
             );
         return http.build();

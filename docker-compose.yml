@@ -5,12 +5,20 @@ services:
     build: .
     container_name: fos
     environment:
-      SPRING_DATASOURCE_URL: jdbc:h2:mem:authdb
-      SPRING_DATASOURCE_DRIVERCLASSNAME: org.h2.Driver
-      SPRING_DATASOURCE_USERNAME: sa
-      SPRING_DATASOURCE_PASSWORD: passw0rd
-      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.H2Dialect
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_H2_CONSOLE_ENABLED: "true"
     ports:
       - "9000:9000"
+
+  postgres:
+    image: postgres:15
+    container_name: fos-auth-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: fos-auth-db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - library-network
