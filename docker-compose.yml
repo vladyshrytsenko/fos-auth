@@ -3,7 +3,7 @@ version: '3.8'
 services:
   app:
     build: .
-    container_name: fos
+    container_name: fos-auth
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5433/fos-auth-db
       SPRING_DATASOURCE_USERNAME: postgres
