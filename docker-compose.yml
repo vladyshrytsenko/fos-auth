@@ -5,9 +5,14 @@ services:
     build: .
     container_name: fos
     environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5433/fos-auth-db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     ports:
       - "9000:9000"
+    depends_on:
+      - postgres
 
   postgres:
     image: postgres:15
