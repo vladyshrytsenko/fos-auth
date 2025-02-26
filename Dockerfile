@@ -1,6 +1,6 @@
 
 FROM openjdk:21-jdk
 WORKDIR /app
-COPY target/fos-auth-0.0.1-SNAPSHOT.jar /app/fos-auth.jar
+COPY target/fos-auth-0.0.1.jar fos-auth.jar
 EXPOSE 9000
-ENTRYPOINT ["java", "-jar", "/app/fos-auth.jar"]
+ENTRYPOINT ["java", "-jar", "fos-auth.jar"]

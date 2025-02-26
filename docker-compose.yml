@@ -2,13 +2,29 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    build:
+      context: .
     container_name: fos-auth
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5433/fos-auth-db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fos-auth-db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+      # Authorization Server configuration
+      CLIENT_OIDC_CLIENT_REGISTRATION_CLIENT_ID: client
+      CLIENT_OIDC_CLIENT_REGISTRATION_CLIENT_SECRET: secret
+      CLIENT_OIDC_CLIENT_REGISTRATION_REDIRECT_URIS: http://localhost:4200/auth-callback
+      CLIENT_OIDC_CLIENT_REGISTRATION_POST_LOGOUT_REDIRECT_URIS: http://localhost:4200/login
+
+      # Google
+      CLIENT_REGISTRATION_GOOGLE_CLIENT_ID: google-client-id
+      CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: google-client-secret
+      CLIENT_REGISTRATION_GOOGLE_REDIRECT_URI: http://localhost:9000/login/oauth2/code/google
+
+      #Github
+      CLIENT_REGISTRATION_GITHUB_CLIENT_ID: github-client-id
+      CLIENT_REGISTRATION_GITHUB_CLIENT_SECRET: github-client-secret
+      CLIENT_REGISTRATION_GITHUB_REDIRECT_URI: http://localhost:9000/login/oauth2/code/github
     ports:
       - "9000:9000"
     depends_on:
@@ -25,5 +41,6 @@ services:
       - "5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    networks:
-      - library-network
+
+volumes:
+  postgres-data:

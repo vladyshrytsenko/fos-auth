@@ -227,12 +227,6 @@ public class WebSecurityConfig {
         return jwtAuthenticationConverter;
     }
 
-    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-id}")
-    private String oidcClientId;
-
-    @Value("${spring.security.oauth2.authorizationserver.client.oidc-client.registration.client-secret}")
-    private String oidcClientSecret;
-
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
 
