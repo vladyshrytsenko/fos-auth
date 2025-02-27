@@ -61,7 +61,7 @@ public class WebSecurityConfig {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 
         http
-            .cors(Customizer.withDefaults())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
             .exceptionHandling(
                 e -> e.authenticationEntryPoint(
@@ -102,7 +102,6 @@ public class WebSecurityConfig {
                 })
             )
 
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
             .authorizeHttpRequests((authorize) -> authorize
                 .requestMatchers(HttpMethod.POST, "/api/users/auth/register").permitAll()
                 .requestMatchers("/oauth2/token", "/oauth2/authorize").permitAll()
