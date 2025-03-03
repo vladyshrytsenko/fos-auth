@@ -1,5 +1,8 @@
 package com.example.fosauth.config;
 
+import com.example.fosauth.config.properties.Client;
+import com.example.fosauth.config.properties.CorsProperties;
+import com.example.fosauth.config.properties.OAuthProperties;
 import com.example.fosauth.exception.EntityNotFoundException;
 import com.example.fosauth.model.entity.User;
 import com.example.fosauth.repository.UserRepository;
@@ -11,7 +14,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -47,11 +50,11 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.util.List;
 import java.util.UUID;
 
 @Configuration
 @EnableWebSecurity
+@EnableConfigurationProperties({OAuthProperties.class, CorsProperties.class})
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
@@ -114,32 +117,35 @@ public class WebSecurityConfig {
 
     @Bean
     public ClientRegistrationRepository clientRegistrationRepository() {
+        Client.Registration registration = this.authProperties.getClient().getRegistration();
+        Client.Provider provider = this.authProperties.getClient().getProvider();
+
         // Google OAuth2 client registration
         ClientRegistration googleClientRegistration = ClientRegistration.withRegistrationId("Google")
-            .clientId(this.googleClientId)
-            .clientSecret(this.googleClientSecret)
+            .clientId(registration.getGoogle().getClientId())
+            .clientSecret(registration.getGoogle().getClientSecret())
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-            .redirectUri("http://localhost:9000/login/oauth2/code/google")
+            .redirectUri(registration.getGoogle().getRedirectUri())
             .scope(OidcScopes.OPENID, OidcScopes.EMAIL, OidcScopes.PROFILE)
-            .authorizationUri("https://accounts.google.com/o/oauth2/auth")
-            .tokenUri("https://oauth2.googleapis.com/token")
-            .userInfoUri("https://www.googleapis.com/oauth2/v3/userinfo")
-            .jwkSetUri("https://www.googleapis.com/oauth2/v3/certs")
+            .authorizationUri(provider.getGoogle().getAuthorizationUri())
+            .tokenUri(provider.getGoogle().getTokenUri())
+            .userInfoUri(provider.getGoogle().getUserInfoUri())
+            .jwkSetUri(provider.getGoogle().getJwtSetUri())
             .build();
 
         // GitHub OAuth2 client registration
         ClientRegistration githubClientRegistration = ClientRegistration.withRegistrationId("Github")
-            .clientId(this.githubClientId)
-            .clientSecret(this.githubClientSecret)
+            .clientId(registration.getGithub().getClientId())
+            .clientSecret(registration.getGithub().getClientSecret())
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-            .redirectUri("http://localhost:9000/login/oauth2/code/github")
+            .redirectUri(registration.getGithub().getRedirectUri())
             .scope("read:user", "user:email")
-            .authorizationUri("https://github.com/login/oauth/authorize")
-            .tokenUri("https://github.com/login/oauth/access_token")
-            .userInfoUri("https://api.github.com/user")
-            .userNameAttributeName("login")
+            .authorizationUri(provider.getGithub().getAuthorizationUri())
+            .tokenUri(provider.getGithub().getTokenUri())
+            .userInfoUri(provider.getGithub().getUserInfoUri())
+            .userNameAttributeName(provider.getGithub().getUserNameAttribute())
             .build();
 
         return new InMemoryClientRegistrationRepository(googleClientRegistration, githubClientRegistration);
@@ -193,7 +199,8 @@ public class WebSecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withJwkSetUri("http://localhost:9000/oauth2/jwks")
+        String jwtSetUri = this.authProperties.getAuthorizationserver().getClient().getOidcClient().getJwtSetUri();
+        return NimbusJwtDecoder.withJwkSetUri(jwtSetUri)
             .jwsAlgorithm(SignatureAlgorithm.RS256)
             .build();
     }
@@ -206,7 +213,7 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:8080", "http://localhost:4200"));
+        configuration.setAllowedOrigins(this.corsProperties.getAllowedOrigins());
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);
@@ -226,15 +233,7 @@ public class WebSecurityConfig {
         return jwtAuthenticationConverter;
     }
 
-    @Value("${spring.security.oauth2.client.registration.google.client-id}")
-    private String googleClientId;
+    private final OAuthProperties authProperties;
+    private final CorsProperties corsProperties;
 
-    @Value("${spring.security.oauth2.client.registration.google.client-secret}")
-    private String googleClientSecret;
-
-    @Value("${spring.security.oauth2.client.registration.github.client-id}")
-    private String githubClientId;
-
-    @Value("${spring.security.oauth2.client.registration.github.client-secret}")
-    private String githubClientSecret;
 }
