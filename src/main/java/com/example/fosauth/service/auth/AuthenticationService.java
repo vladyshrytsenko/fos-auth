@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import static org.apache.commons.lang3.StringUtils.*;
+
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
@@ -21,7 +23,9 @@ public class AuthenticationService {
             .username(userRequestDTO.getUsername())
             .password(passwordEncoder.encode(userRequestDTO.getPassword()))
             .email(userRequestDTO.getEmail())
-            .role(Role.valueOf(userRequestDTO.getRole()))
+            .role(isNotBlank(userRequestDTO.getRole()) ?
+                Role.valueOf(userRequestDTO.getRole()) : Role.USER
+            )
             .build();
 
         User createdUser = this.userRepository.save(userToSave);
