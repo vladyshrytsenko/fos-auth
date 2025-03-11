@@ -49,7 +49,7 @@ public class UserService {
         return UserDto.toDto(userEmail);
     }
 
-    public UserDto update(Long id, UserDto userRequest) {
+    public UserDto updateById(Long id, UserDto userRequest) {
         User userById = this.userRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException(User.class));
 
@@ -61,7 +61,7 @@ public class UserService {
         return UserDto.toDto(updatedUser);
     }
 
-    public void delete(Long id) {
+    public void deleteById(Long id) {
         this.userRepository.deleteById(id);
     }
 
