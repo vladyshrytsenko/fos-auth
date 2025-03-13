@@ -89,14 +89,14 @@ public class UserController {
         @PathVariable Long id,
         @RequestBody UserDto userRequestDto) {
 
-        UserDto updatedUser = this.userService.update(id, userRequestDto);
+        UserDto updatedUser = this.userService.updateById(id, userRequestDto);
         return ResponseEntity.ok(updatedUser);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
 
-        this.userService.delete(id);
+        this.userService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
