@@ -3,15 +3,16 @@ package com.example.fosauth.service;
 import com.example.fosauth.MockData;
 import com.example.fosauth.model.dto.UserDto;
 import com.example.fosauth.model.entity.User;
-import com.example.fosauth.model.enums.Role;
 import com.example.fosauth.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,24 +39,13 @@ public class UserServiceTest {
 
     @Test
     void findAll() {
-        List<User> userList = MockData.userList();
-        when(this.userRepository.findAll()).thenReturn(userList);
+        Page<User> userPage = new PageImpl<>(MockData.userList());
+        when(this.userRepository.findAll(any(Pageable.class))).thenReturn(userPage);
+        Page<User> result = this.userService.findAll(Pageable.unpaged());
 
-        List<UserDto> result = this.userService.findAll();
         assertNotNull(result);
-        assertEquals(2, result.size());
-        verify(this.userRepository, times(1)).findAll();
-    }
-
-    @Test
-    void findByRole() {
-        User user = MockData.user();
-        when(this.userRepository.findByRole(any(Role.class))).thenReturn(Optional.of(user));
-
-        UserDto result = this.userService.findByRole(Role.USER);
-        assertNotNull(result);
-        assertEquals("USER", result.getRole());
-        verify(this.userRepository, times(1)).findByRole(Role.USER);
+        assertEquals(2, result.getTotalElements());
+        verify(this.userRepository, times(1)).findAll(any(Pageable.class));
     }
 
     @Test
