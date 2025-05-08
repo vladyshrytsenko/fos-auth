@@ -30,6 +30,8 @@ public class AuthenticationService {
 
         User createdUser = this.userRepository.save(userToSave);
         return new AuthenticationResponse(
+            createdUser.getFirstName(),
+            createdUser.getLastName(),
             createdUser.getUsername(),
             createdUser.getEmail(),
             createdUser.getRole()

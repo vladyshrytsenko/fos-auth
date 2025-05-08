@@ -1,7 +1,6 @@
 package com.example.fosauth.model.entity;
 
 import com.example.fosauth.model.enums.Role;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -32,11 +31,10 @@ public class User implements UserDetails {
     private Long id;
 
     private String username;
+    private String firstName;
+    private String lastName;
     private String password;
     private String email;
-
-    @Column(name = "google_user_id")
-    private String googleUserId;
 
     @Enumerated(EnumType.STRING)
     private Role role;

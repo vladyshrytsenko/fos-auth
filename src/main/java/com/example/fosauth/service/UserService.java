@@ -6,6 +6,8 @@ import com.example.fosauth.model.entity.User;
 import com.example.fosauth.model.enums.Role;
 import com.example.fosauth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,18 +23,12 @@ public class UserService {
         return UserDto.toDto(userById);
     }
 
-    public List<UserDto> findAll() {
-        List<User> users = this.userRepository.findAll();
-        return UserDto.toDtoList(users);
+    public Page<User> findAll(Pageable pageable) {
+        return this.userRepository.findAll(pageable);
     }
 
     public List<User> findAllEntities() {
         return this.userRepository.findAll();
-    }
-
-    public UserDto findByRole(Role role) {
-        User userByRole = this.userRepository.findByRole(role).orElse(null);
-        return userByRole != null ? UserDto.toDto(userByRole) : null;
     }
 
     public UserDto getByUsername(String username) {

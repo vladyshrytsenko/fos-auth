@@ -23,6 +23,10 @@ public class UserDto {
     @Size(min = 6, max = 32, message = "invalid 'username' size")
     private String username;
 
+    @NotNull(message = "'firstName' should not be null")
+    private String firstName;
+
+    private String lastName;
     private String password;
 
     @Email(message = "invalid 'email' structure")
@@ -30,8 +34,6 @@ public class UserDto {
 
     @NotNull(message = "'role' should not be null")
     private String role;
-
-    private String googleUserId;
 
     public static UserDto toDto(User user) {
         if (user == null) {
@@ -41,10 +43,11 @@ public class UserDto {
         return UserDto.builder()
             .id(user.getId())
             .username(user.getUsername())
+            .firstName(user.getFirstName())
+            .lastName(user.getLastName())
             .password(user.getPassword())
             .email(user.getEmail())
             .role(user.getRole().name())
-            .googleUserId(user.getGoogleUserId())
             .build();
     }
 
@@ -65,10 +68,11 @@ public class UserDto {
 
         return User.builder()
             .username(userDto.getUsername())
+            .firstName(userDto.getFirstName())
+            .lastName(userDto.getLastName())
             .password(userDto.getPassword())
             .email(userDto.getEmail())
             .role(Role.valueOf(userDto.getRole()))
-            .googleUserId(userDto.getGoogleUserId())
             .build();
     }
 }

@@ -191,6 +191,7 @@ public class WebSecurityConfig {
 
                     claims.put("user_id", foundUser.getId());
                     claims.put("email", foundUser.getEmail());
+                    claims.put("full_name", foundUser.getFirstName() + " " + foundUser.getLastName());
                     claims.put("role", foundUser.getRole().name());
                 });
             }
